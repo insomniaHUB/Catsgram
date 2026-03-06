@@ -20,6 +20,10 @@ public class UserService {
         return users.values();
     }
 
+    public Optional<User> findById(long userId) {
+        return Optional.ofNullable(users.get(userId));
+    }
+
     public User create(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             throw new ConditionsNotMetException("Имейл должен быть указан");
@@ -76,9 +80,4 @@ public class UserService {
         }
         return false;
     }
-
-    public Optional<User> findUserById(long id) {
-        return Optional.ofNullable(users.get(id));
-    }
-
 }
