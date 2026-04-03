@@ -1,8 +1,10 @@
 package ru.yandex.practicum.catsgram.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.catsgram.exception.ParameterNotValidException;
 import ru.yandex.practicum.catsgram.model.Post;
 import ru.yandex.practicum.catsgram.model.SortOrder;
 import ru.yandex.practicum.catsgram.service.PostService;
@@ -11,20 +13,28 @@ import java.util.Collection;
 import java.util.Optional;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/posts")
 public class PostController {
     private final PostService postService;
 
-    @Autowired
-    public PostController(PostService postService) {
-        this.postService = postService;
-    }
-
     @GetMapping
-    public Collection<Post> findAll(@RequestParam(defaultValue = "desc") String sort,
+    public Collection<Post> getPosts(@RequestParam(defaultValue = "desc") String sort,
                                     @RequestParam(defaultValue = "0") int from,
                                     @RequestParam(defaultValue = "10") int size) {
-        return postService.findAll(SortOrder.from(sort), from, size);
+        SortOrder sortOrder = SortOrder.from(sort);
+        if (sortOrder == null) {
+            throw new ParameterNotValidException("sort", "Некорректно указанно значение сортировки. " +
+                    "Получено: " + sort + " должно быть: ask или desc");
+        }
+        if (size <= 0) {
+            throw new ParameterNotValidException(String.valueOf(size),
+                    "Некорректный размер выборки. Размер должен быть больше нуля");
+        }
+        if (from < 0) {
+            throw new ParameterNotValidException("from", "Некорректно указано значение начала выборки.");
+        }
+        return postService.findAll(sortOrder, from, size);
     }
 
     @GetMapping("/{postId}")
